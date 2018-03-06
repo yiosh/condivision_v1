@@ -8,7 +8,7 @@ $_SESSION['POST_BACK_PAGE'] = $_SERVER['REQUEST_URI'];
     
 <?php
 	$start = paginazione(CONNECT,$tabella,$step,$ordine,$tipologia_main);
-	$query = "SELECT $select,p.label as periodoLabel,abb.id as abbId FROM `$tabella` abb LEFT JOIN fl_periodi p ON abb.periodo = p.id WHERE abb.id != 1 ORDER BY abb.$ordine LIMIT $start,$step;";
+	$query = "SELECT $select,free,p.label as periodoLabel,abb.id as abbId FROM `$tabella` abb LEFT JOIN fl_periodi p ON abb.periodo = p.id WHERE abb.id != 1 ORDER BY abb.$ordine LIMIT $start,$step;";
 	$risultato = mysql_query($query, CONNECT);
 ?>
 
@@ -16,6 +16,7 @@ $_SESSION['POST_BACK_PAGE'] = $_SERVER['REQUEST_URI'];
   <tr>
     <th></th>
     <th>Id</th>
+    <th>Free</th>
     <th>Nome</th>
     <th>Durata</th>
     <th>Periodo</th>
@@ -31,10 +32,12 @@ $_SESSION['POST_BACK_PAGE'] = $_SERVER['REQUEST_URI'];
 	{
 	
 	$attivo = ($riga['attivo'] == 1) ? 'tab_green' : 'tab_red';
+	$free = ($riga['free'] == 1) ? 'tab_yellow' : '';
 
 			echo "<tr>"; 				
-			echo "<td style=\"$attivo\"></td>";
+			echo "<td style=\"width:10px\" class=\"$attivo\"></td>";
 			echo "<td>".$riga['abbId']."</td>";
+			echo "<td style=\"width:10px\" class=\"$free\"></td>";
 			echo "<td>".$riga['nome']."</td>";	
 			echo "<td>".$riga['durata']."</td>";	
 			echo "<td>".$riga['periodoLabel']."</td>";	

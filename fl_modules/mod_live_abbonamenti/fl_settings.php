@@ -83,7 +83,7 @@
 	$select = array('periodo');
 	$disabled = array();
 	$hidden = array();
-	$radio  = array('attivo');	
+	$radio  = array('attivo','free');	
 	$selectbtn  = array();
 	$multi_selection  = array();	
 	$calendario = array();	

@@ -2,7 +2,7 @@
 
 // Controlli di Sicurezza
 if(!@$thispage){ echo "Accesso Non Autorizzato"; exit;}
-//if(!isset($_GET['associa_evento'])) $_SESSION['POST_BACK_PAGE'] = $_SERVER['REQUEST_URI'];
+$_SESSION['POST_BACK_PAGE'] = $_SERVER['REQUEST_URI'];
 ?>
 
 <div class="filtri" id="filtri"> 
@@ -83,8 +83,7 @@ if(!@$thispage){ echo "Accesso Non Autorizzato"; exit;}
 
      
     </div>
- 
- <?php if(isset($_GET['associa_evento'])) echo '<h2>Inserisci una o più anagrafiche e poi <a class="button" style=" padding: 10px; background: red; color: white; " href="../mod_eventi/mod_inserisci.php?id='.check($_GET['associa_evento']).'&t='.base64_encode(1).'">torna all\'evento</a></h2>'; ?>   
+    
     
 <script type="text/javascript">
 
@@ -126,9 +125,9 @@ $(".sede_operativa").css('font-weight','normal');
 <table class="dati" summary="Dati" style=" width: 100%;">
 <tr>
   <?php if(ATTIVA_ACCOUNT_ANAGRAFICA == 1) { ?><th class="noprint"><a href="./?ordine=2&<?php echo $_SERVER['QUERY_STRING']; ?>">Account</a></th><?php } ?>
-  <th  class="desktop"><a href="./?ordine=3&<?php echo $_SERVER['QUERY_STRING']; ?>">Ragione Sociale</a></th>
+  <th><a href="./?ordine=3&<?php echo $_SERVER['QUERY_STRING']; ?>">Ragione Sociale</a></th>
   
-  <th class="desktop"><a href="#" class="sede_legale">Sede Legale</a><?php if(!defined('ANAGRAFICA_SEMPLICE')){ ?>/<a href="#" class="sede_operativa">Sede Operativa</a><?php } ?> </th>
+  <th><a href="#" class="sede_legale">Sede Legale</a><?php if(!defined('ANAGRAFICA_SEMPLICE')){ ?>/<a href="#" class="sede_operativa">Sede Operativa</a><?php } ?> </th>
   <th>Contatti</th>
   <?php if(ESTRATTO_CONTO_IN_ANAGRAFICA == 1) { ?><th>Saldo</th><?php } ?>
   <?php if(ALERT_DOCUMENTO_SCADUTO == 1) { ?><th></th><?php } ?>
@@ -178,15 +177,15 @@ $(".sede_operativa").css('font-weight','normal');
 			$tipo_profilo_label = '';
 			$notifica_icon = '';
 			}
-			if(!defined('TIPO_DA_ACCOUNT') || TIPO_DA_ACCOUNT == 0) $tipo_profilo_label = $tipo_profilo[$riga['tipo_profilo']];
+			if(TIPO_DA_ACCOUNT == 0) $tipo_profilo_label = $tipo_profilo[$riga['tipo_profilo']];
 			
 			
 			if($show==1) {
 			
 			
-			if(isset($account['attivo']) && $account['attivo'] == 1) { 
+			if($account['attivo'] == 1) { 
 				$colore = "b_green";  
-			} else if(isset($account['attivo']) &&  $account['attivo'] == 0) { 
+			} else if($account['attivo'] == 0) { 
 				$colore = "b_red"; 
 			} else { 
 				$colore = "b_orange"; 
@@ -198,8 +197,8 @@ $(".sede_operativa").css('font-weight','normal');
 			$tot_res++;
 					
 						
-					$nominativo = ($riga['ragione_sociale'] != '') ? ucfirst(checkValue($riga['ragione_sociale'])) : ucfirst(checkValue($riga['nome'])).' '.ucfirst(checkValue($riga['cognome']));		
-					$sede_punto = (!isset($riga['comune_punto'])) ? '' : $riga['comune_punto']." (".@$riga['provincia_punto'].") ".$riga['cap_punto']."<br>".$riga['indirizzo_punto'];
+					$nominativo = ($riga['ragione_sociale'] != '') ? ucfirst($riga['ragione_sociale']) : ucfirst($riga['nome']).' '.ucfirst($riga['cognome']);		
+					
 					echo '<tr>';
 					
 					if(ATTIVA_ACCOUNT_ANAGRAFICA == 1)  echo "<td class=\"desktop $colore\">$user_ball ".$user_check."</td>"; 		
@@ -208,12 +207,12 @@ $(".sede_operativa").css('font-weight','normal');
 					echo " <span class=\"msg orange\">".$tipo_profilo_label." $concessione </span></a></td>";
 					echo "
 					<td class=\"desktop info_sede_legale\">".$riga['comune_sede']." (".@$riga['provincia_sede'].") ".$riga['cap_sede']."<br>".$riga['sede_legale']."</td>
-					<td class=\"desktop info_sede_operativa\" >".$sede_punto."</td>"; 
-					echo "<td class=\"desktop\"><i class=\"fa fa-envelope-o\"></i> <a href=\"mailto:".checkEmail($riga['email'])."\">".checkEmail($riga['email'])."</a>
-					<br><i class=\"fa fa-phone\" style=\"padding: 5px 10px;\"></i>".phone_format($riga['telefono'])." - ".phone_format($riga['cellulare'])."</td>"; 
+					<td class=\"desktop info_sede_operativa\" >".$riga['comune_punto']." (".@$riga['provincia_punto'].") ".$riga['cap_punto']."<br>".$riga['indirizzo_punto']."</td>"; 
+					echo "<td class=\"desktop\"><i class=\"fa fa-envelope-o\"></i> <a href=\"mailto:".$riga['email']."\">".$riga['email']."</a>
+					<br><i class=\"fa fa-phone\" style=\"padding: 5px 10px;\"></i>".$riga['telefono']." - ".$riga['cellulare']."</td>"; 
 					if(ESTRATTO_CONTO_IN_ANAGRAFICA == 1)   echo "<td  class=\"hideMobile\">".$saldo."</td>";
 					if(ALERT_DOCUMENTO_SCADUTO == 1)  echo "<td  class=\"hideMobile\">$note</td>";
-					echo "<td  class=\"strumenti\">";
+					echo "<td  class=\"desktop strumenti\">";
 					if(@PROFILO_ANAGRAFICA == 1)  echo '<a href="mod_inserisci.php?external&action=1&tBiD='.base64_encode('39').'&id='.$riga['id'].'"><i class="fa fa-user"></i>'.get_scan($riga['id']).'</a>';
 					
 					if(@PANORAMICA_ANAGRAFICA == 1)  { 

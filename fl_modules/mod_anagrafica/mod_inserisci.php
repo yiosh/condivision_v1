@@ -53,17 +53,7 @@ echo '<p>Telefono: <a href="tel:'.@$telefono.'">'.@$telefono.'</a> mail: <a href
 
 
 <?php include('../mod_basic/action_estrai.php');  ?>
-<?php if(isset($_GET['view'])) echo '<input type="hidden" name="info" value="1" />';  
-if(!isset($_GET['associa_evento']) && isset($_GET['j'])) { 
-	$potential_id = base64_decode(check($_GET['j']));  echo '<input type="hidden" name="reload" value="../mod_leads/mod_inserisci.php?id='.$potential_id.'&customer_rel=">';
-}
-
-if(isset($_GET['associa_evento'])) { 
-	$associa_evento = check($_GET['associa_evento']);  echo '<input type="hidden" name="reload" value="../mod_eventi/mod_inserisci.php?id='.$associa_evento.'&anagrafica_cliente=">';
-}
-
-
-?>
+<?php if(isset($_GET['view'])) echo '<input type="hidden" name="info" value="1" />';  ?>
 <input type="hidden" name="dir_upfile" value="icone_articoli" />
 
 
@@ -73,11 +63,11 @@ if(isset($_GET['associa_evento'])) {
 if(isset($_GET['j'])) {
 	
 	$potential_id = base64_decode(check($_GET['j']));
-	$new_dati = GRD($tables[106],$potential_id);
+	$new_dati = GRD('fl_potentials',$potential_id);
 	//if(mysql_query("UPDATE `fl_meeting_agenda` SET `issue`= 2 , data_aggiornamento = '".date('Y-m-d H:i:00')."' WHERE potential_rel = '".$potential_id."' LIMIT 1",CONNECT)) {
 	//}
 	
-	$query = "UPDATE `".$tables[106]."` SET `status_potential` = '4', `in_use` = '0', is_customer = '1' WHERE id = '".$potential_id."';";
+	$query = "UPDATE `fl_potentials` SET `status_potential` = '4', `in_use` = '0', is_customer = '1' WHERE id = '".$potential_id."';";
 	mysql_query($query,CONNECT);
 	
 	echo "<script type=\"text/javascript\">
