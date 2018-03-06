@@ -61,28 +61,20 @@
 	if(isset($qualificati_id) && @$qualificati_id == 1) {  $tipologia_main .= " AND (email != '' AND telefono != '' AND nome != '') ";	 }
 	if(isset($qualificati_id) && @$qualificati_id == 0) {  $tipologia_main .= " AND (email = '' OR telefono = '' OR nome = '' ) ";	 }
 
-	// Filtro manuale da sessione
-	if($_SESSION['anagrafica'] > 1) $tipologia_main .= ' AND anagrafica_id = '.$_SESSION['anagrafica'];	
 
-
-	
-	/* Inclusione classi e dati */	
-	require('../../fl_core/dataset/array_statiche.php'); // Liste di valori statiche
-	require('../../fl_core/class/ARY_dataInterface.class.php'); //Classe di gestione dei dati 
-	$data_set = new ARY_dataInterface();
 
 	
 	/*Funzione di merda per gestione dei campi da standardizzare in una classe e legare ad al DB o XML config*/	
 	function select_type($who){
 	
-	$textareas = array('messaggio','commento','note'); 
-	$select = array('reparto_hd','tipologia_hd','stato','anagrafica_id','marchio');
+	$textareas = array(); 
+	$select = array();
 	$disabled = array();
-	$hidden = array('workflow_id','account_id',"proprietario",'operatore','data_creazione','data_aggiornamento');
-	$radio  = array('attivo');	
-	$selectbtn  = array('stato_hd','priorita');
+	$hidden = array('data_creazione');
+	$radio  = array();	
+	$selectbtn  = array();
 	$multi_selection  = array();	
-	$calendario = array('data_chiusura');	
+	$calendario = array();	
 	$file = array("upfile");
 	
 	if($_SESSION['usertype'] > 1) array_push($hidden,'anagrafica_id'); // Eccezioni in base al tipo di utenza
