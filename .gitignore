@@ -1,3 +1,4 @@
-node_modules/*
-fl_config/*
-fl_core/*
+.vscode
+node_modules/
+fl_config/
+fl_core/
