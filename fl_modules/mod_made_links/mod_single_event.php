@@ -201,7 +201,7 @@ input.button, .button input, .button, .button a, a.button, .salva, a.salva, a.cr
   function openNewwindow(){
     $('#myModal').css('display','block');
 
-   var link = '../mod_liveslider/mod_user.php?categoria_link=<?php echo $link_info['categoria_link']; ?>&id=<?php echo $id; ?>&risoluzione='+$('input[name="pollici"]:checked').val()+'&n_monitor='+$('input[name="n_monitor"]:checked').val();
+   var link = '../mod_liveslider/mod_inserisci.php?categoria_link=<?php echo $link_info['categoria_link']; ?>&id=<?php echo $id; ?>&risoluzione='+$('input[name="pollici"]:checked').val()+'&n_monitor='+$('input[name="n_monitor"]:checked').val();
 
    $('#iframeLink').prop('src',link);
 

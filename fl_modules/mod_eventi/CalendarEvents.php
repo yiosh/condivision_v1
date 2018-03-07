@@ -42,7 +42,7 @@ class CalendarEvents {
       $ambientiSql .= ' ) ';
     }
 
-    $query_giorni = "SELECT data_evento FROM " . $sourceTbl.' WHERE stato_evento != 4 AND YEAR(data_evento) = '.$anno.' '.$ambientiSql;
+     $query_giorni = "SELECT data_evento FROM " . $sourceTbl.' WHERE stato_evento != 4 AND YEAR(data_evento) = '.$anno.' '.$ambientiSql;
     $risultato_giorni = mysql_query($query_giorni,CONNECT);
     while($record_giorni = mysql_fetch_assoc($risultato_giorni)){
 

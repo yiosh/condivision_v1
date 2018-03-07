@@ -36,7 +36,7 @@ input[type=radio]:disabled + label, input[type=checkbox]:disabled + label {
 
 input[type=checkbox]:disabled + label.col1{
 
-	background-color: #aaa;
+	background-color: #c58c8c;
 
 
 }
@@ -198,7 +198,7 @@ $annoSelected = (isset($_GET['anno'])) ? check($_GET['anno']) : date('Y') ;
 	echo CalendarEvents::getEvents($tables[6],$anno,@$_GET['mesi'],@$_GET['ambienti'],'getCalendarColumn');   //prelevo il calendario senza i giorni in cui ci sono eventi
 	//calendario completo
 
-	$date_del_lead = GQS($tabella,'id,DATE_FORMAT(data_evento,"%Y-%m-%d") as data_da_selezionare,ambienti,ambiente_principale,ambiente_1,ambiente_2,notturno ','YEAR(data_evento) = '.$anno);
+	$date_del_lead = GQS($tabella,'id,DATE_FORMAT(data_evento,"%Y-%m-%d") as data_da_selezionare,ambienti,ambiente_principale,ambiente_1,ambiente_2,notturno ','YEAR(data_evento) = '.$anno .' AND stato_evento != 4');
 
 	$last_id = 1;
 	$color = 0;

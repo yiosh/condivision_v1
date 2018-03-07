@@ -1,6 +1,7 @@
 <?php
 // Controlli di Sicurezza
-if (!@$thispage) {echo "Accesso Non Autorizzato";exit;}
+require_once('../../fl_core/autentication.php');
+include('fl_settings.php'); // Variabili Modulo 
 $_SESSION['POST_BACK_PAGE'] = $_SERVER['REQUEST_URI'];
 
 ?>
