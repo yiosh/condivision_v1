@@ -183,9 +183,9 @@ $(".sede_operativa").css('font-weight','normal');
 			if($show==1) {
 			
 			
-			if($account['attivo'] == 1) { 
+			if(@$account['attivo'] == 1) { 
 				$colore = "b_green";  
-			} else if($account['attivo'] == 0) { 
+			} else if(@$account['attivo'] == 0) { 
 				$colore = "b_red"; 
 			} else { 
 				$colore = "b_orange"; 
@@ -207,9 +207,9 @@ $(".sede_operativa").css('font-weight','normal');
 					echo " <span class=\"msg orange\">".$tipo_profilo_label." $concessione </span></a></td>";
 					echo "
 					<td class=\"desktop info_sede_legale\">".$riga['comune_sede']." (".@$riga['provincia_sede'].") ".$riga['cap_sede']."<br>".$riga['sede_legale']."</td>
-					<td class=\"desktop info_sede_operativa\" >".$riga['comune_punto']." (".@$riga['provincia_punto'].") ".$riga['cap_punto']."<br>".$riga['indirizzo_punto']."</td>"; 
+					<td class=\"desktop info_sede_operativa\" >".$riga['comune_punto']." (".@$riga['provincia_punto'].") ".@$riga['cap_punto']."<br>".@$riga['indirizzo_punto']."</td>"; 
 					echo "<td class=\"desktop\"><i class=\"fa fa-envelope-o\"></i> <a href=\"mailto:".$riga['email']."\">".$riga['email']."</a>
-					<br><i class=\"fa fa-phone\" style=\"padding: 5px 10px;\"></i>".$riga['telefono']." - ".$riga['cellulare']."</td>"; 
+					<br><i class=\"fa fa-phone\" style=\"padding: 5px 10px;\"></i>".$riga['telefono']." - ".@$riga['cellulare']."</td>"; 
 					if(ESTRATTO_CONTO_IN_ANAGRAFICA == 1)   echo "<td  class=\"hideMobile\">".$saldo."</td>";
 					if(ALERT_DOCUMENTO_SCADUTO == 1)  echo "<td  class=\"hideMobile\">$note</td>";
 					echo "<td  class=\"desktop strumenti\">";
