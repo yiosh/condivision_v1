@@ -13,6 +13,7 @@ $profilo = @GRD('fl_anagrafica',@$id);
 
 
 include('fl_settings.php'); // Variabili Modulo 
+$tab_div_labels = array('marchio'=>'Profilo','cognome'=>"Dati Anagrafici",'tipo_documento'=>"Dati Documento",'forma_giuridica'=>"Dati Fiscali",'tipologia_attivita'=>$etichette_anagrafica['tipologia_attivita'],'telefono'=>"Contatti",'note'=>"Note");
 
 include("../../fl_inc/headers.php");
 if(!isset($_GET['view'])) include("../../fl_inc/testata_mobile.php");
@@ -21,7 +22,12 @@ if(!isset($_GET['view'])) include("../../fl_inc/testata_mobile.php");
 
 
 
-<body style=" background: rgb(241, 241, 241) none repeat scroll 0% 0%;">
+<body style=" background: white;">
+	<style type="text/css">
+		.ui-tabs-nav { display: none; }
+
+		
+	</style>
 
 
 <div id="container" >
@@ -34,9 +40,9 @@ if(!isset($_GET['view'])) include("../../fl_inc/testata_mobile.php");
 <?php if($id > 1) { 
 $telefono = phone_format($profilo['telefono'],'39');
 echo '<h1><strong>'.$profilo['ragione_sociale'].'</strong> ('.$profilo['nome'].' '.$profilo['cognome'].')</h1>';
-if(ALERT_DOCUMENTO_SCADUTO == 1)  echo '<h2>Tipo Delega: <span class="msg gray">'.@$pagamenti_f24[@$profilo['pagamenti_f24']].'</span></h2>';
+//if(ALERT_DOCUMENTO_SCADUTO == 1)  echo '<h2>Tipo Delega: <span class="msg gray">'.@$pagamenti_f24[@$profilo['pagamenti_f24']].'</span></h2>';
 echo '<p>Telefono: <a href="tel:'.@$telefono.'">'.@$telefono.'</a> mail: <a href="mailto:'.@$profilo['email'].'" >'.@$profilo['email'].'</a></h2>';
-} else { echo '<h1>Nuovo '.$tipo_profilo[ $tipo_profilo_id].'</h1>'; }
+} else { echo '<h1>Nuovo Affiliato</h1>'; }
 
 ?>
 
@@ -63,9 +69,12 @@ if(isset($_GET['associa_evento'])) {
 }
 
 
-?>
-<input type="hidden" name="dir_upfile" value="icone_articoli" />
 
+if($id == 1) {
+echo '<input type="hidden" name="reload" value="../mod_account/mod_inserisci.php?id=1&anagrafica_id=" />';
+} else {
+echo '<input type="hidden" name="info" value="1" />';
+} ?>
 
 </form>
 
