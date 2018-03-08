@@ -1,8 +1,7 @@
-<?php
+ <?php
 
 
 class webservice{
-
 
 	var $demo = false; // Se abilitare o meno il demo 
 	var $datatype = "JSON";	
@@ -11,26 +10,23 @@ class webservice{
 	var $user;
 	var $password;
 	var $uid;
-	var $userId; 
+	var $userId; //User that own the record
 	var $accountId; //User that is connected
 	var $obbligatorio = array('nome');
 	var $numerici = array('telefono','cellulare');
-	var $date = array();
-	var $table = 'fl_leads';
+	var $date = array('data_test_drive','periodo_cambio_vettura');
+	var $table = 'fl_account';
 	var $secret = 're56fdsfw285hfw5k3923k2ASYLWJ8tr3';
 	var $push_type = 'post';
 	var $fcmToken = 0;
 	var $recordId = 1;
 	var $what = '*';
-	//var $start_Date = $_GET['start_Date'];
-	//var $end_Date = $_GET['end_Date'] ;
-	
-
 
 function app_start(){
 	session_cache_limiter( 'private_no_expire' );
 	session_cache_expire(time()+5259200); 
     session_start();		
+	
 	if(session_id() != $this->token && $this->token != 'app') {	
 	    $this->contenuto = '';
 		$this->contenuto['esito'] = 0;
@@ -42,13 +38,12 @@ function app_start(){
 
 }
 
-private function cnv_makedata(){
+function cnv_makedata(){
 	
 	mysql_close(CONNECT);		
 	
 	if($this->datatype == 'JSON') {
 	echo json_encode($this->contenuto);
-	exit;
 	}
 	
     if($this->datatype == 'OBJECT') {
@@ -57,26 +52,27 @@ private function cnv_makedata(){
 	
 	if($this->datatype == 'XML') {
 	echo json_encode($this->contenuto);
-	exit;
 	}
 	
+	exit;
 }
 
+/*ENGINE*/
 function insertUpdate($recordId){
 
 	$issue = 0;
-	if($recordId == 0) mail('michelefazio@aryma.it','Record id 0 in insertUpdate',$recordId);
 	$sql = 'DESCRIBE '.$this->table.';';
 	$updateSQL = 'UPDATE '.$this->table.' SET ';
 	$createSQL = 'INSERT INTO '.$this->table.' VALUES ();';
 	$fields = $this->query($sql);
 	
 	sleep(1);
-	
+
 	while($FieldProp = mysql_fetch_array($fields)){ 
 		
 		$FieldName = $FieldProp['Field'];
-		if($FieldName == 'data_aggiornamento' && $recordId != 1) $updateRecord = 1;
+		if($FieldName == 'data_aggiornamento') $updateRecord = 1;
+		if($FieldName == 'is_app') $is_app = 1;
 		if($FieldName != 'id' && $FieldName != 'data_creazione'){
 		if(isset($_GET['explain'])) echo "VALUE EXPECTED: ".$FieldName.' ('.$FieldProp['Type'].','.$FieldProp['Null'].','.$FieldProp['Default'].')<br>';
 			
@@ -88,9 +84,9 @@ function insertUpdate($recordId){
 		}
 	}
 
-	if(!isset($updateRecord) && $recordId == 1) $updateSQL .=  ', data_creazione = NOW() '; //Used only for new entries!
+	if(isset($updateRecord) && $recordId == 1) $updateSQL .=  ', data_creazione = NOW() '; // only for new entries!
 	if(isset($updateRecord)) $updateSQL .=  ', data_aggiornamento = NOW() '; 
-
+	if(isset($is_app)) $updateSQL .=  ', is_app = 1 '; 
 
 	
 
@@ -98,12 +94,24 @@ function insertUpdate($recordId){
 	
 	$updateSQL .= ' WHERE id = '.$recordId;
 	$issue = (isset($_GET['explain'])) ? '(NO QUERY SENT IN DEBUG MODE) : '.$updateSQL : $this->query($updateSQL);
-	if($issue < 1) mail('supporto@aryma.it','Query app error',$updateSQL);
+	//@mail('supporto@aryma.it','Query app',$updateSQL.$_REQUEST['documento_fronte']);
 	if($issue == 1) $issue = $recordId;
 	
 	return  $issue;//Issue of Update
 	
 }
+
+function deleteRecord($recordId){
+
+	$updateSQL = 'DELETE FROM '.$this->table;
+	$updateSQL .= ' WHERE id = '.$recordId;
+
+	$issue = (isset($_GET['explain'])) ? '(NO QUERY SENT IN DEBUG MODE) : '.$updateSQL : $this->query($updateSQL);
+	if($issue == 1) $issue = $recordId;
+	return  $issue;
+	
+}
+
 
 function getRecordData(){ 
 
@@ -113,16 +121,39 @@ function getRecordData(){
 
 }
 
-function query($sql){ 
-  $results = mysql_query($sql,CONNECT);
-  if(mysql_affected_rows() < 0) mail('supporto@aryma.it','Query app error',$sql.mysql_error());
-  return  (mysql_affected_rows() >= 0) ? $results : -1;
+function getRows(){
+	
+	$dataRows = array();
 
+	$query = "SELECT * FROM ".$this->table."  WHERE ".$this->where;
+	
+	if($risultato = mysql_query($query,CONNECT)){
+	
+	while($riga = mysql_fetch_array($risultato)){
+
+		$dataRows[] = $riga;
+	}
+
+
+	$this->contenuto['class'] = 'green';
+	$this->contenuto['esito'] = "OK";
+	$this->contenuto['results'] = $dataRows;
+	
+	} else { 
+	$this->contenuto['class'] = 'red';
+	$this->contenuto['esito'] = "Error 1102: Errore caricamento.".mysql_error();
+	}
+	
+	return $this->contenuto;
 }
 
-function checkDuplicate($sql){ 
+
+function query($sql){ 
   $results = mysql_query($sql,CONNECT);
-  return  (mysql_affected_rows() >= 0) ? mysql_affected_rows() : -1;
+  if(mysql_affected_rows() < 0) $this->ErrorLog('Errore query su host '.ROOT,$sql.' '.mysql_error());
+  //@mail('supporto@aryma.it','Query app on'.ROOT,$sql.mysql_error());
+	
+  return  (mysql_affected_rows() >= 0) ? $results : mysql_affected_rows();
 }
 
 function cherookee($Field,$FieldName,$Type,$Null=NULL,$Default=''){ 
@@ -131,511 +162,316 @@ function cherookee($Field,$FieldName,$Type,$Null=NULL,$Default=''){
   return  '`'.$FieldName.'` =  \''.$Field.'\''; //Per ora non fa nulla
 }
 
-
-public function determina_data($data){
-	$str_array = preg_split('/[\/\-]/', $data);
-	return (strlen($str_array[0]) == 4) ? $data : $this->convert_data($data,1);
+public static function determina_data($data){
+			$str_array = preg_split('/[\/\-]/', $data);
+			return (strlen($str_array[0]) == 4) ? $data : convert_data($data,1);
 }
 
 
 
-function get_data_values(){ // source data service
-	
 
 
 
 
-$leads_daily = "SELECT count(*) as tot FROM fl_potentials WHERE   DAY(data_creazione) = DAY(CURDATE()) AND MONTH(data_creazione) = MONTH(CURDATE()) AND YEAR(data_creazione) = YEAR(CURDATE())";
-
-$leads_monthly = "SELECT count(*) AS tot FROM fl_potentials WHERE MONTH(data_creazione) = MONTH(CURDATE())
-  AND YEAR(data_creazione) = YEAR(CURDATE())";
-
-$sales_monthly = "SELECT SUM( `price` ) AS tot
-FROM `fl_contratti`
-WHERE `marchio` =1
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) ) ";
-  
-$revenue_monthly = "SELECT SUM( `importo` ) AS tot
-FROM `fl_pagamenti`
-WHERE `marchio` =1 AND (status_pagamento = 4 OR status_pagamento = 7) AND causale BETWEEN 1 AND 5
-AND MONTH( `data_operazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_operazione` ) = YEAR( CURDATE( ) ) ";
-
-$potentialSBySourceMonthlyUK = "SELECT `source_potential` , count( * )
-FROM `fl_potentials`
-WHERE `marchio` =1
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY `source_potential`";
-
-$potentialSBySourceDailyUK = "SELECT `source_potential` , count( * )
-FROM `fl_potentials`
-WHERE `marchio` =1
-AND DAY(data_creazione) = DAY(CURDATE())  
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY `source_potential`";
 
 
-$potentialSByStatusMonthlyUK = "SELECT `status_potential` , count( * )
-FROM `fl_potentials`
-WHERE `marchio` = 1
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY `status_potential`";
-
-$morning_check = "SELECT tb1 . * , tb2.user
-FROM `fl_contratti` AS tb1
-LEFT JOIN fl_admin AS tb2 ON tb1.operatore = tb2.id
-WHERE tb1.`data_creazione` = ( CURDATE( ) - INTERVAL 1
-DAY )
-LIMIT 0 , 100";
-
-$customersTotalsMonthlyUK = "SELECT count( * ) AS tot
-FROM `fl_customers`
-WHERE `marchio` = 1
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )";
 
 
-  	$path = check($_GET['path']);
-	$query = $$path;
-	if($risultato = mysql_query($query,CONNECT)){
-	
-	$riga = mysql_fetch_array($risultato);
-	
-	$this->contenuto['total'] = $riga['tot'];
-	
-	} else { 
+
+
+
+
+
+
+private function ErrorLog($sbj,$message) { 
+		//smail(mail_admin,$sbj,$message);
+		return null;
+}
+
+
+
+
+
+
+/*UPLOAD FILES METHODS*/
+public function uploadFile($file,$folder,$file_name,$workflow_id=0,$record_id=0,$descrizione='',$tags='',$lang='en',$fileAction='prefix'){
+
+
+
+$esiti = array();
+$esiti[0] = "Inserire il file da caricare!";
+$esiti[1] = "Caricamento avvenuto correttamente";
+$esiti[2] = "Impossibile Caricare il file";
+$esiti[3] = "Not valid file extension";
+$esiti[4] = "Formato file non valido.";
+$esiti[5] = "File esistente";
+$esiti[6] = "Il file contiente errori.";
+$esiti[7] = "Impossibile creare cartella di destinazione.";
+$esiti[8] = "Impossibile creare cartella per le anteprime.";
+$esiti[9] = "Cartella di destinazione non scrivibile.";
+$notAllowed = array('exe','src','scr','piff','php','php3','mdb','mdbx','sql');
+
+/* Check File Type */
+$info = pathinfo($file['name']); 
+foreach($info as $key => $valore){ 
+	if($key == "extension")
+	$ext = $info["extension"]; 
+}
+
+if(!isset($ext) || in_array(strtolower($ext),$notAllowed)){ 
 	$this->contenuto['class'] = 'red';
-	$this->contenuto['esito'] = "Error 1102: Errore caricamento.".mysql_error();
+	$this->contenuto['esito'] = 0;
+	$this->contenuto['info_txt'] = $esiti[3];
+	$this->cnv_makedata();
+} 
+
+
+$file_name = ($file_name != '') ? $file_name.'.'.strtolower($ext) : $file['name']; // If we set a file name it take new name else it use the original file name. 4marco: Should be receive an injection by file name?
+
+/* Check Folder and duplicate file name */
+if(!@is_dir($folder)) {  
+	if(!@mkdir($folder,0777)) {
+	$this->contenuto['class'] = 'red';
+	$this->contenuto['esito'] = 0;
+	$this->contenuto['info_txt'] = $esiti[7];
+	$this->ErrorLog('Errore DMS API '.ROOT,$esiti[7].' :: '.$folder);
+	$this->cnv_makedata();
+	} 
+}
+if(!is_writable($folder)) {  
+	$this->contenuto['class'] = 'red';
+	$this->contenuto['esito'] = 0;
+	$this->contenuto['info_txt'] = $esiti[9].' :: '.$folder;
+	$this->ErrorLog('Errore DMS API '.ROOT,$esiti[9].' :: '.$folder);
+	$this->cnv_makedata();
+	}
+
+if(file_exists($folder.$file_name)) {  
+	if($fileAction=='unique'){
+		$this->contenuto['class'] = 'red';
+		$this->contenuto['esito'] = 0;
+		$this->contenuto['info_txt'] = $esiti[5];
+		$this->ErrorLog('Errore DMS API '.ROOT,$esiti[5].' :: '.$folder);
+		$this->cnv_makedata();
+	} else if($fileAction=='overwrite') {
+		//Nothing it will overwrite existent
+	} else {
+		$file_name = time().$file_name;
+	}
+	}
+
+$saveFile = $folder.$file_name;
+
+if(is_uploaded_file($file['tmp_name'])){
+	
+	if(move_uploaded_file($file['tmp_name'],$saveFile)){
+	
+	$query = "INSERT INTO `fl_dms` (`id`, `resource_type`, `account_id`, `workflow_id`, `record_id`, `parent_id`, `label`, `descrizione`, `tags`, `file`, `lang`, `proprietario`, `operatore`, `data_creazione`, `data_aggiornamento`) 
+	VALUES (NULL, '1', '".$this->userId."', '$workflow_id', '$record_id', '$folder', '$file_name', '$descrizione', '$tags', '$file_name', '$lang', '".$this->accountId."', '".$this->accountId."', NOW(),NOW() );	";
+	if($record_id > 0) $this->query($query); //If goes wrong wuery method send us an email with error so we can fix any problem (never happend in 10 years!)
+	//if($record_id > 0) $this->toDMS($folder,$file_name,$workflow_id,$record_id,$descrizione,$tags,$lang);
+	} else {
+
+	$this->contenuto['class'] = 'red';
+	$this->contenuto['esito'] = 0;
+	$this->contenuto['info_txt'] = $esiti[9];
+	$this->cnv_makedata();
+
 	}
 	
+} else {
+	
+	$this->contenuto['class'] = 'red';
+	$this->contenuto['esito'] = 0;
+	$this->contenuto['info_txt'] = $esiti[2];
 	$this->cnv_makedata();
 }
 
-/*function get_data_values_second(){ 
-
-$leads_between = "SELECT count(*) as tot FROM fl_potentials WHERE  data_creazione between '.$start_Date.' AND '.$end_Date.' ";
-
-$path = check($_GET['path']);
-	$query = $$path;
-	if($risultato = mysql_query($query,CONNECT)){
-	
-	$riga = mysql_fetch_array($risultato);
-	
-	$this->contenuto['total'] = $riga['tot'];
-
-	} else { 
-	$this->contenuto['class'] = 'red';
-	$this->contenuto['esito'] = "Error 1102: Errore caricamento.".mysql_error();
-	}
-	
-	$this->cnv_makedata();
-
-
-
-}*/
-
-function get_data_rows(){ // source data service
-
-
-$data_da = date('Y-m-1');
-$data_a = date('Y-m-d');
-
-if(isset($_GET['data_da'])) $data_da = check($_GET['data_da']);
-if(isset($_GET['data_a'])) $data_a = check($_GET['data_a']);
-
-
-$potentialSLast7Days = "SELECT `data_creazione` , count( * ) as tot
-FROM `fl_potentials`
-WHERE `marchio` =1
-AND  `data_creazione` > (NOW() - INTERVAL 7 DAY)
-GROUP BY `data_creazione`
-ORDER BY `data_creazione` DESC
-";
-
-
-
-$potentialSBySourceMonthlyUK = "SELECT `source_potential` , count( * ) as tot
-FROM `fl_potentials`
-WHERE `marchio` =1
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY `source_potential`
-";
-
-$potentialSBySourceDailyUK = "SELECT `source_potential` , count( * ) as tot
-FROM `fl_potentials`
-WHERE `marchio` =1
-AND DAY(data_creazione) = DAY(CURDATE())  
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY `source_potential`
-";
-
-$potentialSBySource30daysUK = "SELECT `source_potential` , count( * ) as tot
-FROM `fl_potentials`
-WHERE `marchio` = 1
-AND data_creazione > NOW() - INTERVAL 30 DAY 
-GROUP BY `source_potential`
-";
-
-$potentialSBySource30daysPastYearUK = "SELECT `source_potential` , count( * ) as tot
-FROM `fl_potentials`
-WHERE `marchio` =1
-AND data_creazione > NOW() - INTERVAL 365 DAY
-GROUP BY `source_potential`
-";
-
-$issue = array('Booked','Arrived','In Contract','No Show','Not Interested','Pending','In meeting');
-$issue = (isset($_GET['issue'])) ? ' AND issue = '.check($_GET['issue']) : '';
-$meetingsLast7days = "
-SELECT CONCAT(DAY(`meeting_date`),'/', MONTH(`meeting_date`)) AS day , count( * ) AS tot
-FROM `fl_meeting_agenda` 
-WHERE `meeting_date` BETWEEN (NOW() - INTERVAL 7 DAY) AND NOW() $issue 
-GROUP BY `meeting_date`
-";
-
-
-$potentialSByStatusMonthlyUK = "SELECT `status_potential` , count( * ) as tot
-FROM `fl_potentials`
-WHERE `marchio` = 1
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY `status_potential`
-";
-
-$potentialSByStatusDailyUK = "SELECT `status_potential` , count( * ) as tot
-FROM `fl_potentials`
-WHERE `marchio` = 1
-AND DAY(data_creazione) = DAY(CURDATE())  
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY `status_potential`
-";
-
-$potentialSFunnel = "SELECT `status_potential` , count( * ) as tot
-FROM `fl_potentials`
-WHERE `marchio` = 1
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-AND status_potential IN(0,1,2,7)
-GROUP BY `status_potential`
-";
-
-
-$potentialSByLanguageUK = "SELECT preferedlanguage, count( preferedlanguage ) AS tot
-FROM fl_potentials
-WHERE id > 1 AND preferedlanguage > 1 AND data_creazione > NOW() - INTERVAL 90 DAY 
-GROUP BY preferedlanguage ORDER BY tot DESC
-";
-
-$potentialSByLanguageDailyUK = "SELECT preferedlanguage, count( preferedlanguage ) AS tot
-FROM fl_potentials
-WHERE id > 1 AND preferedlanguage > 1  AND DAY(data_creazione) = DAY(CURDATE())  
-AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY preferedlanguage ORDER BY tot DESC
-";
-
-$potentialSByLanguageMonthlyUK = "SELECT preferedlanguage, count( preferedlanguage ) AS tot
-FROM fl_potentials
-WHERE id > 1 AND preferedlanguage > 1 AND MONTH(`data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY preferedlanguage ORDER BY tot DESC
-";
-
-
-$salesBySourceMonthlyUK = "SELECT tb1.source_id, SUM( tb2.price ) AS tot
-FROM `fl_customers` AS tb1
-LEFT JOIN fl_contratti AS tb2 ON tb1.id = tb2.customer_rel
-WHERE tb1.marchio <2
-AND MONTH( tb1. `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( tb1. `data_creazione` ) = YEAR( CURDATE( ) )
-GROUP BY tb1.`source_id` DESC  ORDER BY tot DESC";
-
-$salesBySource3MonthsUK = "SELECT tb1.source_id, SUM( tb2.price ) AS tot
-FROM `fl_customers` AS tb1
-LEFT JOIN fl_contratti AS tb2 ON tb1.id = tb2.customer_rel
-WHERE tb1.marchio <2
-AND tb1.`data_creazione` > CURDATE( ) - INTERVAL 90
-DAY
-GROUP BY tb1.`source_id` DESC  ORDER BY tot DESC";
-
-$salesBySourceYearsUK = "SELECT tb1.source_id, SUM( tb2.price ) AS tot
-FROM `fl_customers` AS tb1
-LEFT JOIN fl_contratti AS tb2 ON tb1.id = tb2.customer_rel
-WHERE tb1.marchio <2
-AND tb1.`data_creazione` > CURDATE( ) - INTERVAL 365
-DAY
-GROUP BY tb1.`source_id` DESC  ORDER BY tot DESC";
-
-$salesBySourceWeekUK = "SELECT tb1.source_id, SUM( tb2.price ) AS tot
-FROM `fl_customers` AS tb1
-LEFT JOIN fl_contratti AS tb2 ON tb1.id = tb2.customer_rel
-WHERE tb1.marchio <2
-AND tb1.`data_creazione` > CURDATE( ) - INTERVAL 7
-DAY
-GROUP BY tb1.`source_id` DESC  ORDER BY tot DESC";
-
-
-
-$productsByType = "SELECT `product_desc`,SUM(`price`) as totale, marchio FROM `fl_contratti` WHERE `marchio` = 1 AND MONTH( `data_creazione` ) = MONTH( CURDATE( ) )
-AND YEAR( `data_creazione` ) = YEAR( CURDATE( ) ) GROUP BY product_desc ORDER BY totale DESC
-";
-
-
-
-$paymentBySource = "SELECT `source_id` , SUM( importo ) AS tot
-FROM `fl_customers` AS `tb1`
-LEFT JOIN `fl_pagamenti` AS `tb2` ON tb1.id = tb2.customer_rel
-WHERE (
-tb1.data_creazione
-BETWEEN '$data_da'
-AND '$data_a'
-)
-AND tb2.causale =1
-GROUP BY source_id
-ORDER BY tot DESC
-LIMIT 0 , 1000
-";
-
-$newCurtomersByPeriod = "SELECT `tb1`.`source_id` , count( * ) AS total
-FROM `fl_customers` AS `tb1`
-LEFT JOIN `fl_customers_cv` AS `tb2` ON tb1.id = tb2.id
-WHERE (tb1.data_creazione BETWEEN '$data_da' AND '$data_a')
-AND tb2.status_profilo >0
-GROUP BY `tb1`.`source_id`
-ORDER BY `total` DESC
-LIMIT 0 , 1000";
-
-
-  	$path = check($_GET['path']);
-	$query = $$path;
-	$status_potential = array('New','Not Show','In Meeting','Not interested','Wrong','Hazardous','Archived','In contract');
-	$preferedlanguage  = $this->get_items_key("languages");
-
-	if($risultato = mysql_query($query,CONNECT)){
-	
-	while($riga = mysql_fetch_assoc($risultato)){
-	
-	if(isset($riga['status_potential'])) $riga['status_potential']  = $status_potential[$riga['status_potential']];
-	if(isset($riga['preferedlanguage'])) $riga['preferedlanguage']  = $preferedlanguage[$riga['preferedlanguage']];
-	if(isset($riga['source_potential'])) $value = $riga['source_potential'];
-	if(isset($riga['source_id']) && check($riga['source_id']) == '' ) $value = 'UNKNOW 1';
-	$this->contenuto[] = $riga;
-	
-	}
-
-	} else { 
-	$this->contenuto['class'] = 'red';
-	$this->contenuto['esito'] = "Error 1102: Errore caricamento.".mysql_error();
-	}
-	
-	$this->cnv_makedata();
+//ADD Antivirus check here (4marco)
+return true;
 }
 
-function getCount(){
-	
-	$dataRows = array();
 
-	$query = "SELECT ".$this->what." FROM ".$this->table."  WHERE ".$this->where;
+function base64_to_jpeg($base64_string,$folder='./',$output_file) {
+   
+    $ifp = fopen($folder.$output_file, "wb");
+
+    $data = explode(',', $base64_string);
+
+    fwrite($ifp, base64_decode($data[0]));
+
+    fclose($ifp);
+
+    return $folder.$output_file;
+
+}
+
+public function toDMS($label,$file_name,$workflow_id=0,$record_id=0,$parent_id=0,$descrizione='',$tags='',$lang='en'){
+
+	$query = "INSERT INTO `fl_dms` (`id`, `resource_type`, `account_id`, `workflow_id`, `record_id`, `parent_id`, `label`, `descrizione`, `tags`, `file`, `lang`, `proprietario`, `operatore`, `data_creazione`, `data_aggiornamento`) 
+	VALUES (NULL, '1', '".$this->userId."', '$workflow_id', '$record_id', '$parent_id', '$label', '$descrizione', '$tags', '$file_name', '$lang', '".$this->accountId."', '".$this->accountId."', NOW(),NOW() );";
 	
-	if($risultato = mysql_query($query,CONNECT)){
-	
+	$insertId = $this->query($query); //If goes wrong wuery method send us an email with error so we can fix any problem (never happend in 10 years!)
+	//mail('supporto@aryma.it', "Query toDMS",$query);
+
+	return $insertId;
+}
 
 
-		return mysql_affected_rows();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function insert_lead(){
+
+
+$this->contenuto['esito'] = 0;
+
+if(!isset($_POST['privacy']) || $_POST['privacy'] == 0){
+$this->contenuto['class'] = 'red';
+$this->contenuto['esito'] = "Per continuare è necessario autorizzare al trattamento dei propri dati!";
+$this->cnv_makedata();
+}
+
+$mail_message = '';
+// Campi Obbligatori
+foreach($_POST as $chiave => $valore){
 	
-	} else { 
+		if(in_array($chiave,$this->obbligatorio)) {
+		if($valore == ""){
+		$chiave = ucfirst(check($chiave));
+		$this->contenuto['class'] = 'red';
+		$this->contenuto['esito'] = "Compila il campo $chiave";
+		$this->cnv_makedata();
+
+		}}
 		
-		return mysql_affected_rows();
-	
-	}
-	
+		if(in_array($chiave,$this->numerici)) {
+		if(!is_numeric(trim($valore))){
+		$chiave = ucfirst(check($chiave));
+		$this->contenuto['class'] = 'red';
+		$this->contenuto['esito'] = "Inserisci solo numeri in $chiave";
+		$this->cnv_makedata();
+		}}
+		
+
+		$$chiave = $this->check($valore);
+		if(in_array($chiave,$this->date)) $$chiave = $this->convert_data($this->check($valore),1);
+		$mail_message .= '<p>'.$chiave.' = '.$$chiave.'</p>';
+}
+
+
+if(!is_numeric(trim($telefono)) || strlen(@$telefono) < 9 ){
+$this->contenuto['class'] = 'red';
+$this->contenuto['esito'] = "Inserisci un numero di telefono corretto, almeno 9 cifre!";
+$this->cnv_makedata();
 }
 
 
 
-function doTotali($totaleChekin,$totaPrenotazioni){
-	
-
-	$this->contenuto['class'] = 'green';
-	$this->contenuto['esito'] = "OK";
-	$this->contenuto['results'] = array('checkin'=>$totaleChekin,'prenotazioni'=>$totaPrenotazioni);
-	
-	
-	$this->cnv_makedata();
+$regex = '/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/'; 
+if (isset($email) && !preg_match($regex, $email)){
+$this->contenuto['class'] = 'red';
+$this->contenuto['esito'] = "Inserisci email valido";
+$this->cnv_makedata();
 }
 
 
-function getRows(){
-	
-	$dataRows = array();
+$campi = array('nome', 'cognome','email', 'messaggio','telefono','citta','ragione_sociale', 'partita_iva','campagna','attivita','oggetto','messaggio','note');
+foreach($campi as $chiave => $valore){
+	if(!isset($$valore)) $$valore = '';
+}
+$campagna = 8;
+$attivita = 2;
 
-	$query = "SELECT ".$this->what." FROM ".$this->table."  WHERE ".$this->where;
+
+$sql = "INSERT INTO `fl_leads` (`id`, `data_aggiornamento`,`priorita_contatto`, `data_aggiornamento`,`priorita_contatto`, `nome`, `cognome`, `email`, `telefono`, `citta`,`ragione_sociale`, `partita_iva`, `messaggio`,  `note`, `operatore`, `proprietario`, `venditore`, `data_creazione`, `data_assegnazione`, `data_scadenza`, `data_scadenza_venditore`) 
+VALUES (NULL,  NOW(), '$priorita',  '$nome', '$cognome', '$email','$telefono',  '$citta', '$ragione_sociale', '$partita_iva', '$oggetto $messaggio', '$note', '1', '1', '', NOW(), '', '', '');";
+
+
+
+if(mysql_query($sql, CONNECT)){
+
+$lead_id = mysql_insert_id();
+$mail_subject = "Nuovo Lead Inserito";
+
+
+$this->contenuto['class'] = 'green';
+$this->contenuto['url'] = '#';
+$this->contenuto['esito'] = "Grazie l'interesse!";
+
+$mail_body2 = str_replace("[*CORPO*]",$mail_message,mail_template); 
+//mail('supporto@aryma.it', $mail_subject, $mail_message);
+
+
+} else {
+
+
+$this->contenuto['class'] = 'red';
+$this->contenuto['esito'] = "Error 1101: Problema inserimento lead.".mysql_error();
+$mail_message = "ERRORE DATABASE: ".mysql_error().'<br>'.$mail_message;
+$mail_body3 = str_replace("[*CORPO*]",$mail_message,mail_template); 
+//smail( mail_admin, "Problema inserimento nuovo lead su: ".ROOT,$mail_body3);
+}				 
+
+$this->cnv_makedata();
+
+} // Lead in
+
+
+
+function get_leads(){
+	$leads = array();
+	$query = "SELECT * FROM `fl_potentials`  WHERE 1 ORDER BY data_creazione DESC";
 	
 	if($risultato = mysql_query($query,CONNECT)){
 	
-	while($riga = mysql_fetch_assoc($risultato)){
+	while($riga = mysql_fetch_array($risultato)){
 
-		$dataRows[] = $riga;
-	}
-
-
+	array_push($leads,array(
+	
+	'id'=>$riga['id'],
+	'nome'=>$riga['nome'],
+	'cognome'=>$riga['cognome'],
+	'priorita'=>$riga['priorita']
+	));
+	
+	}	
 	$this->contenuto['class'] = 'green';
 	$this->contenuto['esito'] = "OK";
-	$this->contenuto['results'] = $dataRows;
-	
-	} else { 
-	$this->contenuto['class'] = 'red';
-	$this->contenuto['esito'] = "Error 1102: Errore caricamento.".mysql_error();
-	}
-	
-	$this->cnv_makedata();
-}
-
-
-function checkSubcription($customer,$lesson) {
-    $lessonInfo = GRD('fl_course_lessons',$lesson);  //I take customer info
-	$check = "SELECT * FROM `fl_subscriptions` WHERE `relation_id` = ".$lessonInfo['course']." AND `customer_rel` = $customer AND `data_inizio` <= CURDATE( ) AND `data_fine` >= CURDATE( ) AND attivo=1";
-    $this->query($check);
-	$esito = (mysql_affected_rows() > 0) ? 1 : 0;
-	return $esito;
-
-}
-
-function getMeetings(){
-	
-	$dataMeetings = array();
-
-	$query = "SELECT * FROM ".$this->table."  WHERE ".$this->where;
-	
-	if($risultato = mysql_query($query,CONNECT)){
-	
-	while($riga = mysql_fetch_assoc($risultato)){
-
-	$issue = array('Booked','Arrived','In Contract','No Show','Not Interested','Pending','In meeting');
-
-
-
-		$proprietario = GRD('fl_admin',$riga['proprietario']); // I take promoter data
-		$potential_rel = GRD('fl_potentials',$riga['potential_rel']);  //I take customer info
-
-		$riga['promoterName'] = $proprietario['nominativo'];
-		$riga['customerName'] = $potential_rel['nome'].' '.$potential_rel['cognome'];
-		$riga['source_potential'] = $potential_rel['source_potential'].' '.$potential_rel['referer'];
-		$riga['NewCustomerId'] = ($potential_rel['is_customer'] > 1) ? $potential_rel['is_customer'] : 1;
-		$riga['issue'] = $issue[$riga['issue']];
-		$riga['meeting_date'] = $this->mydate($riga['meeting_date']);
-		$riga['meeting_time'] = substr($riga['meeting_time'],0,5);
-
-		$dataMeetings[] = $riga;
-	}
-
-
-	$this->contenuto['class'] = 'green';
-	$this->contenuto['esito'] = "OK";
-	$this->contenuto['results'] = $dataMeetings;
-	
-	} else { 
-	$this->contenuto['class'] = 'red';
-	$this->contenuto['esito'] = "Error 1102: Errore caricamento.".mysql_error();
-	}
-	
-	$this->cnv_makedata();
-}
-
-
-function getPayments(){
-	
-	$dataPayments = array();
-
-	$query = "SELECT * FROM ".$this->table."  WHERE ".$this->where;
-	
-	if($risultato = mysql_query($query,CONNECT)){
-	
-	while($riga = mysql_fetch_assoc($risultato)){
-
-	$valuta = array('GBP','GBP','EUR');
-	$metodo_di_pagamento = array('Not selected','Cash','BT Bank Transfert','Credit Card','Paypal','GoCardless','Credit Collection','Cheque');
-	$status_pagamento = array('Waiting','Paid','Bill Asked','Executed','Registered','Canceled','Refunded');
-
-
-		$proprietario = GRD('fl_admin',$riga['proprietario']); // I take promoter data
-		$customer_rel = GRD('fl_customers',$riga['customer_rel']);  //I take customer info
-		if($riga['tipo_pagamento'] == 1) $company_rel = GRD('fl_restaurants',$riga['customer_rel']);
-
-		$riga['proprietario'] = $proprietario['nominativo'];
-		$riga['customerName'] = ($riga['tipo_pagamento'] == 1) ? $company_rel['ragione_sociale'] : $customer_rel['nome'].' '.$customer_rel['cognome'];
-		$riga['metodo_di_pagamento'] = $metodo_di_pagamento[$riga['metodo_di_pagamento']];
-		$riga['valuta'] = $valuta[$riga['valuta']];
-		$riga['status_pagamento'] = $status_pagamento[$riga['status_pagamento']];
-		$riga['data_operazione'] = $this->mydate($riga['data_operazione']);
-
-		$dataPayments[] = $riga;
-	}
-
-
-	$this->contenuto['class'] = 'green';
-	$this->contenuto['esito'] = "OK";
-	$this->contenuto['results'] = $dataPayments;
-	
-	} else { 
-	$this->contenuto['class'] = 'red';
-	$this->contenuto['esito'] = "Error 1102: Errore caricamento.".mysql_error();
-	}
-	
-	$this->cnv_makedata();
-}
-
-
-function getExperiences(){
-	
-	$dataRows = array();
-
-	$query = "SELECT * FROM ".$this->table."  WHERE profile_rel = ".$this->userId;
-	
-	if($risultato = mysql_query($query,CONNECT)){
-	
-	while($riga = mysql_fetch_assoc($risultato)){
-
-		$dataRows[] = $riga;
-	}
-
-
-	$this->contenuto['class'] = 'green';
-	$this->contenuto['esito'] = "OK";
-	$this->contenuto['results'] = $dataRows;
-	
-	} else { 
-	$this->contenuto['class'] = 'red';
-	$this->contenuto['esito'] = "Error 1102: Errore caricamento.".mysql_error();
-	}
-	
-	$this->cnv_makedata();
-}
-
-
-function getStudies(){
-	
-	$dataRows = array();
-
-	$query = "SELECT * FROM ".$this->table."  WHERE profile_rel = ".$this->userId;
-	
-	if($risultato = mysql_query($query,CONNECT)){
-	
-	while($riga = mysql_fetch_assoc($risultato)){
-
-		$dataRows[] = $riga;
-	}
-
-
-	$this->contenuto['class'] = 'green';
-	$this->contenuto['esito'] = "OK";
-	$this->contenuto['results'] = $dataRows;
+	$this->contenuto['leads'] = $leads;
 	
 	} else { 
 	$this->contenuto['class'] = 'red';
@@ -650,13 +486,13 @@ function get_items($item_rel,$condition=0) {
 	$dati = array();
 	if($risultato = mysql_query($query,CONNECT)){
 	
-	while($riga = mysql_fetch_assoc($risultato)){
-	$descrizione = (isset($riga['descrizione'])) ? $riga['descrizione'] : '';
+	while($riga = mysql_fetch_array($risultato)){
+
 	array_push($dati,array(
 	
 	'id'=>$riga['id'],
 	'label'=>$riga['label'],
-	'descrizione'=>$descrizione
+	'descrizione'=>$riga['descrizione']
 	));
 	
 	}	
@@ -677,7 +513,7 @@ function get_items($item_rel,$condition=0) {
 function lead_info($lead_id) {
  	
 	$this->app_start();
-	$query = "SELECT * FROM `fl_leads` WHERE `id` = $lead_id LIMIT 1";
+	$query = "SELECT * FROM `fl_leads_hrc` WHERE `id` = $lead_id LIMIT 1";
 	$risultato = mysql_query($query,CONNECT);	
 	$riga = @mysql_fetch_array($risultato); 
 	
@@ -690,24 +526,47 @@ function lead_info($lead_id) {
 
 }
 
-function get_page(){
+
+function listArticles(){
+	$content = array();
+	$risultato = $this->query("SELECT * FROM `fl_articoli`  WHERE categoria_id = ".$this->categoria_id." ORDER BY data_creazione DESC");
+	
+	while($riga = mysql_fetch_array($risultato)){
+
+	array_push($content,array(
+	'id'=>$riga['id'],
+	'titolo'=>$riga['titolo'],
+	'data_pubblicazione'=>$riga['data_pubblicazione'],
+	'articolo'=>$riga['articolo'],
+	'video'=>$riga['video'],
+	'video'=>$riga['sorgente_esterna'],
+	'data_aggiornamento'=>$riga['data_aggiornamento']
+	));
+	}
+
+	$this->contenuto['class'] = 'green';
+	$this->contenuto['esito'] = "OK";
+	$this->contenuto['content'] = $content;
+	
+	$this->cnv_makedata();
+}
+
+
+function getArticle(){
 		
-		$query = "SELECT * FROM `fl_articles` WHERE `id`  = '".$this->page_id."' LIMIT 1";
-		if($risultato = mysql_query($query,CONNECT)){
+		$risultato = $this->query("SELECT * FROM `fl_articoli` WHERE `id`  = '".$this->articleId."' AND status_contenuto > 0 LIMIT 1");
 		$riga = mysql_fetch_array($risultato);
 		
 		$this->contenuto['esito'] = 1;
-		$this->contenuto['info_txt'] = "Pagina";
-		$this->contenuto['page_title'] = $riga['titolo'];
-		$this->contenuto['page_content'] = $this->css.$this->convert($riga['articolo']);
-		
-		} else {
-			
-		$this->contenuto['esito'] = 0;
-		$this->contenuto['info_txt'] = "Errore";
-		
-		}
-		
+		$this->contenuto['info_txt'] = "Ok";
+		$this->contenuto['id'] = $riga['id'];
+		$this->contenuto['data_pubblicazione'] = $riga['data_pubblicazione'];
+		$this->contenuto['titolo'] = $riga['titolo'];
+		$this->contenuto['articolo'] = $this->convert($riga['articolo']);
+		$this->contenuto['video'] = $riga['video'];
+		$this->contenuto['sorgente_esterna'] = $riga['sorgente_esterna'];
+		$this->contenuto['data_aggiornamento'] = $riga['data_aggiornamento'];
+	
 		$this->cnv_makedata();
 }
 
@@ -715,53 +574,51 @@ function do_login(){
 		
 		$this->app_start();
 
-		/*$regex = '/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/'; 
-		if ($this->user != 'sistema' && !preg_match($regex,strtolower(trim($this->token)))){
-		$this->contenuto['esito'] = 1;
+		$regex = '/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/'; 
+		if (!defined('LOGINBYUSER') && $this->user != 'sistema' && !preg_match($regex,strtolower(trim($this->user)))){
+		$this->contenuto['esito'] = 0;
 		$this->contenuto['info_txt'] = "Per usare le api devi essere registrato";
 		$this->cnv_makedata();
-		}*/
+		}
 
 		
-		if(($this->user == "" || $this->password == "") && $this->uid == 0) {	
+		if($this->user == "" || $this->password == "") {	
 		$this->contenuto['esito'] = 0;
 		$this->contenuto['info_txt'] = "Inserisci user e password!";
 		$this->cnv_makedata();
 		}
 		
 	
+		if($this->user != "" && $this->password != ""){
 		
 		$this->password = md5($this->password); 
 		
-		$query = "SELECT * FROM `fl_admin` WHERE `password`  = '".$this->password."' AND `user`  = '".trim(strtolower($this->user))."' LIMIT 1";
-		if($this->uid != 0) $query = "SELECT * FROM `fl_admin` WHERE  `uid`  = '".$this->uid."' LIMIT 1";
-		$risultato = mysql_query($query,CONNECT);
+		$query = "SELECT * FROM `".$this->table."` WHERE `password`  = '".$this->password."' AND `user`  = '".$this->user."' LIMIT 1";
+		if($this->uid != 0) $query = "SELECT * FROM `".$this->table."` WHERE  `uid`  = '".$this->uid."' LIMIT 1";
 		
-		$this->contenuto['esito'] = 0;
-		$this->contenuto['info_txt'] = mysql_affected_rows();
-	
+		$risultato = mysql_query($query,CONNECT);
 	
 		if(mysql_affected_rows(CONNECT) < 1){		
 		$this->contenuto['esito'] = 0;
-		$this->contenuto['info_txt'] = "Email o password errate o utente Fb non riconosciuto";
+		$this->contenuto['info_txt'] = "Email o password errate!";
 		$this->cnv_makedata();
 		} 		
 		
 		$riga = mysql_fetch_array($risultato);
-
+				
+		
 		if($riga['attivo'] == 0){		
 		$this->contenuto['esito'] = 0;
 		$this->contenuto['info_txt'] = "Utente non attivo.";
 		$this->cnv_makedata();
 		}
 		
-		$fcmToken =  ($this->fcmToken > 0) ? ", fcmToken = '".$this->fcmToken."'" : '';		
-		$query = "UPDATE `fl_admin` SET `visite` = visite+1 $fcmToken WHERE `id` = '".$riga['id']."' LIMIT 1;";
-		//mail('michelefazio@aryma.it',$this->user,$query);
+
+		$fcmToken = ", fcmToken = '".$this->fcmToken."'";		
+		$updateAccount = "UPDATE `".$this->table."` SET `visite` = visite+1 $fcmToken WHERE `id` = '".$riga['id']."' LIMIT 1;";
+		if(!mysql_query($updateAccount,CONNECT)) mail('supporto@aryma.it',"Update FcmToken Fallito",$updateAccount);
 
 
-		mysql_query($query,CONNECT);
-		
 		$_SESSION['user'] = $riga['user'];
 		$_SESSION['operatore'] = $riga['user'];
 		$_SESSION['userid'] = $riga['id'];
@@ -773,6 +630,7 @@ function do_login(){
 		$_SESSION['idh'] = $_SERVER['REMOTE_ADDR'];
 		$_SESSION['aggiornamento_password'] = $riga['aggiornamento_password'];
 		$_SESSION['marchio'] = $riga['marchio'];
+		
 		// Fine Avvio Sessione			
 		$agent = @$_SERVER['HTTP_USER_AGENT'];
 		$referer = @$_SERVER['HTTP_REFERER'];
@@ -787,12 +645,13 @@ function do_login(){
 		$this->contenuto['email'] = $_SESSION['mail'];
 		$this->contenuto['usr_id'] = $_SESSION['number'];	
 		$this->contenuto['token'] = session_id();
+		$this->contenuto['fcmToken'] = $this->fcmToken;
 		$this->contenuto['nome'] = $_SESSION['nome'];	
 		$this->contenuto['aggiornamento_password'] = $riga['aggiornamento_password'];	
 		$this->contenuto['time'] = time();	
 		$this->contenuto['idh'] = $_SERVER['REMOTE_ADDR'];
 		$this->contenuto['marchio'] = $_SESSION['marchio'] ;
-	
+		}
 		$this->cnv_makedata();
 } // Login
 
@@ -864,116 +723,7 @@ return $data;
 }
 
 
-function sms($to,$text,$from=0,$smsId='') {
-if($to != ''){
-	
-require_once('../fl_set/librerie/twilio-php-master/Services/Twilio.php');
-$client = new Services_Twilio(account_sid, auth_token);
-$from = ($from==0) ? from : $from;
 
-try{	
-
-$client->account->messages->create(array( 
-	'To' =>  $to, 
-	'From' => $from,    
-	'Body' =>  $text
-)); 
-return 1; 
-
-} catch (Exception $e) {	
-  return  $from.$e->getMessage(); 
-}
-
-
-} else {  return 'Destinatario non speficicato.'; }
-
-}
-
-public function get_items_key($chiave=""){
-	
-	$filtrocerca = " AND (";
-	$chiave = explode(",",$chiave);
-	$items_rel = array();
-
-	foreach($chiave as $key => $valore){
-	if(strstr($valore,"valore")) $valore = "valore";
-	$filtrocerca .= " chiave LIKE '%[*$valore*]%' ";
-	} $filtrocerca .= " OR chiave = '[*]') ";
-	
-	$tcat = "SELECT * FROM `fl_items` WHERE id != 1 AND attiva > 0 $filtrocerca ORDER BY label ASC;";
-	
-	$cat_res = mysql_query($tcat, CONNECT);
-		
-	while (@$riga_res = mysql_fetch_array($cat_res)) 
-	{
-	
-	$items_rel = $this->data_get_items($riga_res['id']);	
-
-	}		
-	if(count($items_rel) < 1) $items_rel[0] = '--';
-	return $items_rel;
-			
-}
-
-public function data_get_items($item_rel=0){
-
-  
-	$items_rel = array();
-	$items_rel[1] = "Non Selezionato";
-	$filtro = "AND item_rel = $item_rel ";
-
-	
-	$tcat = "SELECT * FROM `fl_items` WHERE id != 1 AND attiva > 0 $filtro ORDER BY id ASC;";
-	
-	$cat_res = mysql_query($tcat, CONNECT);
-		
-	while (@$riga_res = mysql_fetch_array($cat_res)) 
-	{
-		
-	$descrizione = (@$riga_res['descrizione'] == '')	? '' : ' - '.@$riga_res['descrizione'];
-	$items_rel[$riga_res['id']] = $riga_res['label'].$descrizione;
-	}		
-	return $items_rel;
-}
-
-function smail($destinatario,$soggetto,$messaggio,$from='',$nameFrom='',$allegato='',$allname=''){
-
-if(!defined('SMTPSecure')) define('SMTPSecure','');
-if(!defined('Port')) define('Port','25');
-
-require_once('../fl_set/librerie/PHPMailer/PHPMailerAutoload.php');
-$mail = new PHPMailer;
-$mail->isSMTP();
-$mail->SMTPAuth = true;
-$mail->SMTPDebug = 0;
-$mail->Debugoutput = 'html';
-$mail->Host = mail_host;
-$mail->SMTPSecure = SMTPSecure; 
-$mail->Port = Port; 
-$mail->Username = mail_user;
-$mail->Password = mail_password;
-$mail->setFrom(mail_user, mail_name);
-//if($from != '') { $mail->setFrom($from, $nameFrom);  } else { $mail->setFrom(mail_user, mail_name); }
-($from != '') ? $mail->addReplyTo($from, $nameFrom) : $mail->addReplyTo(mail_user, mail_name);
-
-$mail->addAddress($destinatario,$destinatario);
-$mail->Subject = $soggetto;
-$mail->Body = $messaggio; 
-$mail->AltBody = 'To view this email please enable HTML';
-if($allegato != '') $mail->addAttachment($allegato, $allname);
-
-
-if(!$mail->send()) {
-mail(mail_admin,'..:: Errore funzione smail '.mail_host.' port '.Port,$mail->ErrorInfo);
-return $mail->ErrorInfo; 
-} else {
-return true;
-}
-
-$mail->clearAddresses();
-$mail->clearAttachments();
-	
-}
 
 
 }
