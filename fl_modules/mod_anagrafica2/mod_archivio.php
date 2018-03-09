@@ -127,7 +127,7 @@ $_SESSION['POST_BACK_PAGE'] = $_SERVER['REQUEST_URI'];
 				
 				
 			if($account['id'] > 0)  { 
-			$user_check = '<a title="Modifica Account"  href="../mod_account/mod_visualizza.php?id='.$account['id'].'">'.$account['user'].'</a><br>'.$account['motivo_sospensione'];
+			$user_check = '<a title="Modifica Account"  href="../mod_account2/mod_visualizza.php?id='.$account['id'].'">'.$account['user'].'</a><br>'.$account['motivo_sospensione'];
 			$user_ball = ($account['attivo'] == 1)  ? "<span class=\"c-green\"><i class=\"fa fa-user\"></i></span>" : "<span class=\"c-red\"><i class=\"fa fa-user\"></i></span>"; 
 			$saldo = balance($account['id']);
 			$saldo = '<a data-fancybox-type="iframe" class="fancybox_view"  href="../mod_depositi/mod_user.php?operatore_text='.$account['nominativo'].'&operatore='.$account['id'].'"> &euro; '.numdec($saldo,2).'</a>';
@@ -135,7 +135,7 @@ $_SESSION['POST_BACK_PAGE'] = $_SERVER['REQUEST_URI'];
 			
 			if($riga['account'] == "") mysql_query("UPDATE $tabella SET account = '".$account['user']."' WHERE id = ".$riga['id']." LIMIT 1");
 			} else {
-			$user_check = "<a href=\"../mod_account/mod_inserisci.php?anagrafica_id=".$riga['id']."&email=".$riga['email']."&nominativo=".$riga['ragione_sociale']."\">Crea account</a>";
+			$user_check = "<a href=\"../mod_account2/mod_inserisci.php?anagrafica_id=".$riga['id']."&email=".$riga['email']."&nominativo=".$riga['ragione_sociale']."\">Crea account</a>";
 			$user_ball = '';
 			$saldo = 0;
 			$tipo_profilo = '';

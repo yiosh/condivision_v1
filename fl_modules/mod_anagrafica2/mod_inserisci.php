@@ -71,7 +71,7 @@ if(isset($_GET['associa_evento'])) {
 
 
 if($id == 1) {
-echo '<input type="hidden" name="reload" value="../mod_account/mod_inserisci.php?id=1&anagrafica_id=" />';
+echo '<input type="hidden" name="reload" value="../mod_account2/mod_inserisci.php?id=1&anagrafica_id=" />';
 } else {
 echo '<input type="hidden" name="info" value="1" />';
 } ?>

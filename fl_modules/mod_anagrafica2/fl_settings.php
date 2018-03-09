@@ -26,7 +26,7 @@
 
 	$module_title = 'Anagrafica';
     $module_menu = '';
-	if(isset($_GET['action'])) $new_button = '';
+	$new_button = '<a href="mod_inserisci.php?a=accoun&external&action=1&id=1&nominativo=Nuovo utente" style="color:gray"><i class="fa fa-plus-circle"></i></a>';
 	if(isset($_GET['action']) && check(@$_GET['action']) == 4) $module_title = 'Contact Center';
 		
 	if(isset($_GET['tab_id'])) { $tab_id = check($_GET['tab_id']); }
@@ -193,7 +193,7 @@
 	}
 	
 	if(isset($id) && @$id != 1 && ATTIVA_ACCOUNT_ANAGRAFICA == 1 && !isset($view)) { 
-	$tab_div_labels['../mod_account/mod_scheda.php?anagrafica_id=[*ID*]&external'] = "Account";
+	$tab_div_labels['../mod_account2/mod_scheda.php?anagrafica_id=[*ID*]&external'] = "Account";
 	}
 
 	}

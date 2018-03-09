@@ -3,7 +3,13 @@
 
 require_once('../../fl_core/autentication.php');
 include('fl_settings.php'); // Variabili Modulo 
- 
+
+if(isset($_GET['anagrafica_id'])) {
+$anagrafica = GRD('fl_anagrafica',check($_GET['anagrafica_id']));
+$nominativo = $anagrafica['ragione_sociale'];
+$email = $anagrafica['email'];
+
+ }
 include("../../fl_inc/headers.php");
 include("../../fl_inc/testata_mobile.php");
 
@@ -24,7 +30,7 @@ include("../../fl_inc/testata_mobile.php");
 $class = (isset($_GET['success'])) ? 'green' : 'red'; echo '<p class="esito '.$class.'">'.check($_GET['esito']).'</p><p style="text-align: center;"><a title="Torna Indietro" href="javascript:history.back();">&lt;&lt;Indietro</a></p>'; }  else { ?>
 <div id="results"></div>
 
-<form  method="post" class="ajaxForm" action="mod_opera.php" enctype="multipart/form-data">
+<form  method="post"  action="mod_opera.php" enctype="multipart/form-data">
 
 
 <h1><span class="intestazione">Crea nuovo Account</span></h1>
@@ -42,9 +48,7 @@ $class = (isset($_GET['success'])) ? 'green' : 'red'; echo '<p class="esito '.$c
 
 
 
-<?php if(defined('MULTI_MARCHIO')) { ?>
-
-<div class="form_row">
+<!--<div class="form_row">
 <div class="select_text">
 <label for="account">Marchio</label>
 
@@ -56,9 +60,14 @@ foreach($marchio as $valores => $label){ // Recursione Indici di Categoria
 			} ?>
 
 </select>
-</div></div><?php } else { echo '<input name="marchio" id="marchio" value="1" type="hidden">'; } ?>
+</div></div>-->
+<input name="marchio" id="marchio" value="1" type="hidden">
 
-
+<?php if(isset($_GET['anagrafica_id'])) { ?>
+<h2>Account con accesso: Affiliato <input name="account" id="account" value="2" type="hidden"></h2>
+<input name="anagrafica" id="anagrafica" value="<?php echo check(@$_GET['anagrafica_id']); ?>" type="hidden">
+<input name="persona_id" id="persona_id" value="0" type="hidden">
+<?php } else { ?>
 
 <div class="form_row">
 <p class="select_text">
@@ -107,40 +116,34 @@ foreach($persona_id as $valores => $label){ // Recursione Indici di Categoria
 </select>
 </p></div>
 
+<?php } ?>
 
 <div class="form_row"><p class="input_text"><label for="nominativo">Nickname</label>
-<input  type="text" name="nominativo" id="nominativo"  value="<?php if(isset($_GET['nominativo'])) echo check($_GET['nominativo']); ?>"  />
+<input  type="text" name="nominativo" id="nominativo"  value="<?php if(isset($nominativo)) echo $nominativo; ?>"  />
 </p>
 </div>
 
-<div class="form_row">
-<p class="input_text">
-<label for="ip_accesso">Ip accesso</label>
-<input  type="text" name="ip_accesso" id="ip_accesso"  value=""  />
-</p>
-</div>
 
 
 
 <div class="form_row">
 <p class="input_text"><label for="email">Email: </label>
-<input name="email" type="text" value="<?php if(isset($_GET['email'])) echo check($_GET['email']); ?>"  size="40" maxlength="255" />
+<input name="email" type="text" value="<?php if(isset($email)) echo $email; ?>"  size="40" maxlength="255" />
 </p></div>
 
 <div class="form_row">
 <p class="input_text"><label for="email2">Conferma Email : </label>
-<input name="email2" type="text" value="<?php if(isset($_GET['email'])) echo check($_GET['email']); ?>"  size="40" maxlength="255" />
+<input name="email2" type="text" value="<?php if($email) echo $email; ?>"  size="40" maxlength="255" />
 </p></div>
 
 
 <h1><strong>Dati di Accesso</strong></h1>
 
-<?php if(defined('USER_PERSONALIZZABILE')) { ?>
 <div class="form_row">
 <p class="input_text"><label for="user">Username: </label>
-<input name="user" type="text"  size="40" maxlength="255" value="<?php if(isset($_GET['email'])) echo substr(str_replace('@','',str_replace('.',date('Y'),check($_GET['email']))),0,8); ?>"  />
+<input name="user" type="text"  size="40" maxlength="255" value="" placeholder="User min. 3 caratteri"  />
 </p></div>
-<?php } ?>
+
 
 <div class="form_row">
 <p class="input_text">

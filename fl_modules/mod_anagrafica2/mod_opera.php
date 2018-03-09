@@ -24,7 +24,7 @@ $query_x = "UPDATE fl_account SET anagrafica_id = ".$riga['id']." WHERE id = $re
 if(!mysql_query($query_x,CONNECT)) { 
 echo "<h1>Impossibile associare anagrafica</h1>"; 
 }else{
-header("Location: ../mod_account/?action=12&id=$relid#tab_anagrafica"); 
+header("Location: ../mod_account2/?action=12&id=$relid#tab_anagrafica"); 
 }
 mysql_close(CONNECT);
 exit;
