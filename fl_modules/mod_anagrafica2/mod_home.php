@@ -141,7 +141,7 @@ if (isset($_GET['ordine'])) {if (!is_numeric($_GET['ordine'])) {exit;} else { $o
 
 $start = paginazione(CONNECT, $tabella, $step, $ordine, $tipologia_main, 0);
 
-$query = "SELECT $select FROM `$tabella` $tipologia_main ORDER BY $ordine LIMIT $start,$step;";
+echo $query = "SELECT $select,tipo  FROM `$tabella` ana LEFT JOIN fl_account acc ON acc.anagrafica = ana.id $tipologia_main ORDER BY $ordine LIMIT $start,$step;";
 
 $risultato = mysql_query($query, CONNECT);
 echo mysql_error();
@@ -154,9 +154,7 @@ echo mysql_error();
 
   <th class="desktop"><a href="#" class="sede_legale">Sede Legale</a><?php if (!defined('ANAGRAFICA_SEMPLICE')) {?>/<a href="#" class="sede_operativa">Sede Operativa</a><?php }?> </th>
   <th>Contatti</th>
-  <?php if (ESTRATTO_CONTO_IN_ANAGRAFICA == 1) {?><th>Saldo</th><?php }?>
-  <?php if (ALERT_DOCUMENTO_SCADUTO == 1) {?><th></th><?php }?>
-  <th class="noprint"><a href="./?ordine=0&<?php echo $_SERVER['QUERY_STRING']; ?>">Recenti</a> | <a href="./?ordine=1&<?php echo $_SERVER['QUERY_STRING']; ?>">Meno recenti</a></th>
+  <th class="noprint"></th>
 
 </tr>
 <?php
@@ -169,17 +167,17 @@ $deleted = 0;
 $incomplete = 0;
 
 while ($riga = mysql_fetch_assoc($risultato)) {
-	/*
+	
 	echo '<pre>';
 	print_r($riga);
 	echo '/<pre>';
-	*/
+    
 
 	$htmlRiga = '<tr><td></td>';
-	$htmlRiga .= '<td>'.$riga['ragione_sociale'].'</td>';
-	$htmlRiga .= '<td>'.$stato_sede[$riga['stato_sede']].'</td>';
-	$htmlRiga .= '<td></td>';
-	$htmlRiga .= '<td>'.$riga['telefono'].' '.$riga['cellulare'].' <br> '.$riga['email'].'</td>';
+	$htmlRiga .= '<td>'.$riga['id'].' '.$riga['ragione_sociale'].'<br>P.Iva '.$riga['partita_iva'].' <span class="msg orange">'.$tipo[$riga['tipo']].'</span> </td>';
+	$htmlRiga .= '<td>'.$riga['comune_sede'].' '.$riga['cap_sede'].'<br>'.$riga['indirizzo_sede_legale'].'</td>';
+    $htmlRiga .= '<td>tel: '.$riga['telefono'].' cel: '.$riga['cellulare'].' <br> mail: '.$riga['email'].'</td>';
+    $htmlRiga .= '<td></td>';
 
 	echo $htmlRiga;
 

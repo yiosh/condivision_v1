@@ -30,7 +30,7 @@ if(isset($_GET['auto'])) {
     exit;
 } 
 
-$_SESSION['last_managed'] = array('id'=>$id,'name'=>$evento['titolo_ricorrenza'],'link'=>'../mod_eventi/mod_scheda_servizio.php?evento_id='.$evento_id.'&id='.$id);
+$_SESSION['last_managed'] = array('id'=>$id,'name'=>$evento['titolo_ricorrenza'],'link'=>ROOT.'fl_modules/mod_eventi/mod_scheda_servizio.php?evento_id='.$evento_id.'&id='.$id);
 
 
 
@@ -82,9 +82,9 @@ if($_SERVER['HTTP_HOST'] == 'calderonimartini.condivision.cloud'){
 
  echo "<div class=\"module_icon\"><a data-fancybox-type=\"iframe\" class=\"fancybox_view \" href=\"$tableauManager\" title=\"Tableau Manager\" style=\"color:   $colorScheda\"><i class=\"fa fa-braille\" aria-hidden=\"true\"></i> TAVOLI E OSPITI</a></div>";
  echo "<div class=\"module_icon\"><a data-fancybox-type=\"iframe\" class=\"fancybox_view \" style=\"color:   $colorScheda\" href=\"../mod_stampe_servizio/mod_menu_evento.php?evento_id=".$evento_id."\" title=\"Lista ingresso\" style=\"color:   $colorMenu\"><i class=\"fa fa-map\" aria-hidden=\"true\"></i> MENU TAVOLI</a></div>";         
- if($tavoli['id'] > 1) echo "<div class=\"module_icon\"><a data-fancybox-type=\"iframe\" class=\"fancybox_view_small \"  href=\"../mod_stampe_servizio/mod_cavalieri.php?evento_id=".$evento_id."\" title=\"Stampa Cavalieri\" style=\"color:   $colorScheda\"><i class=\"fa fa-bookmark\" aria-hidden=\"true\"></i>  CAVALIERI</i></a></div>";
- if($tavoli['id'] > 1) echo "<div class=\"module_icon\"><a data-fancybox-type=\"iframe\" class=\"fancybox_view \" href=\"../mod_stampe_servizio/mod_lista_ingresso.php?evento_id=".$evento_id."\" title=\"Lista ingresso\" style=\"color:  $colorScheda\"><i class=\"fa fa-users\" aria-hidden=\"true\"></i></i>  LISTA INGRESSO</a></div>";
- if($tavoli['id'] > 1) echo "<div class=\"module_icon\"><a data-fancybox-type=\"iframe\" class=\"fancybox_view \" href=\"../mod_stampe_servizio/mod_lista_intolleranze.php?evento_id=".$evento_id."\" title=\"Lista intolleranze\" style=\"color:  $colorScheda\"><i class=\"fa fa-leaf\" aria-hidden=\"true\"></i>  LISTA INTOLLERANZE</a></div>";
+ echo "<div class=\"module_icon\"><a data-fancybox-type=\"iframe\" class=\"fancybox_view_small \"  href=\"../mod_stampe_servizio/mod_cavalieri.php?evento_id=".$evento_id."\" title=\"Stampa Cavalieri\" style=\"color:   $colorScheda\"><i class=\"fa fa-bookmark\" aria-hidden=\"true\"></i>  CAVALIERI</i></a></div>";
+ echo "<div class=\"module_icon\"><a data-fancybox-type=\"iframe\" class=\"fancybox_view \" href=\"../mod_stampe_servizio/mod_lista_ingresso.php?evento_id=".$evento_id."\" title=\"Lista ingresso\" style=\"color:  $colorScheda\"><i class=\"fa fa-users\" aria-hidden=\"true\"></i></i>  LISTA INGRESSO</a></div>";
+ echo "<div class=\"module_icon\"><a data-fancybox-type=\"iframe\" class=\"fancybox_view \" href=\"../mod_stampe_servizio/mod_lista_intolleranze.php?evento_id=".$evento_id."\" title=\"Lista intolleranze\" style=\"color:  $colorScheda\"><i class=\"fa fa-leaf\" aria-hidden=\"true\"></i>  LISTA INTOLLERANZE</a></div>";
  $GeneraAllegato =  "mod_allegato1.php?evento_id=".$evento_id;
 
  echo "<div><a href=\"mod_inserisci.php?id=$evento_id\" class=\"button\">Vai a amministrazione</a>

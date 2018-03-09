@@ -55,7 +55,7 @@
 	if(!isset($_GET['stato_evento']) || check($_GET['stato_evento']) < 0) $tipologia_main .= " AND stato_evento != 4 "; 
 
 
-	$basic_filters = array('centro_di_ricavo','ambienti','periodo_evento','stato_evento');
+	$basic_filters = array('ambiente_principale','centro_di_ricavo','ambienti','periodo_evento','stato_evento');
 	if(isset($_GET['action']) && check($_GET['action']) != 24) $basic_filters[] = 'titolo_ricorrenza';
 
 	
@@ -105,13 +105,13 @@
 	function select_type($who){
 	
 	/* Gestione Oggetto Statica */	
-	$textareas = array(); 
+	$textareas = array('note_contratto','note_servizio'); 
 	$select = array('notturno','ambiente_principale','ambiente_1','ambiente_2','tipo_servizio_evento','centro_di_ricavo','preventivo_collegato','tipo_evento','periodo_evento','location_evento',"mansione","paese","proprietario");
 	$disabled = array();
 	$hidden = array('anagrafica_cliente','anagrafica_cliente2',"colore","descrizione",'altro','evento_id','customer_id',"data_creazione",'proprietario','marchio','contract_id',"data_arrived",'lead_id','is_customer',"data_aggiornamento","marchio","ip","operatore",'condizioni_aggiuntive','estremi_acconto','ricevuta_numero','importo_ricevuta','note');
 	$radio = array('all_day','multievento');
 	$text = array();
-	$calendario = array();	
+	$calendario = array('data_contratto');	
 	$checkbox = array('stato_evento','fiori','gruppo_musicale');
 	$file = array();
 	$timer = array();
@@ -119,7 +119,7 @@
 	$datePicker = array('data_fine_evento','data_evento','start_date','end_date');
 	$multi_selection = array("ambienti");	
 	$ifYesText = array("segnaposti", "bomboniere", "dolci", "ospiti_serali");
-	//if(defined('MULTI_AMBIENTE')) $hidden[] = 'ambienti';
+	if(defined('MULTI_LOCATION')) $hidden[] = 'ambienti';
 	/*	
 	if(isset($_GET['id']) && check($_GET['id']) == 1) { array_push($hidden,'anagrafica_cliente','anagrafica_cliente2','condizioni_aggiuntive','estremi_acconto'); }
 	*/

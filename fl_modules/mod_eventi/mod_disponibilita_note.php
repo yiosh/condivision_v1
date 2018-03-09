@@ -44,7 +44,7 @@ mysql_close(CONNECT);
   
  
 
-  <a href="mod_disponibilita_pdf.php?lead_id=<?php echo $lead_id; ?>" class="button"> Conferma </a>
+  <a href="mod_disponibilita_pdf.php?lead_id=<?php echo $lead_id; ?>" class="button" onclick="javascript:$('.updateField').trigger('focusOut'); "> Procedi </a>
  
   </div>
 

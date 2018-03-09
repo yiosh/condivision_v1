@@ -163,7 +163,7 @@ $annoSelected = (isset($_GET['anno'])) ? check($_GET['anno']) : date('Y') ;
 		foreach ($anni as $key => $value) {
 
 		$sel = ($value == @$annoSelected) ? 'selected' : '';
-		$tot = mk_count('fl_eventi_hrc',' (YEAR(data_evento) = '.$value.') ');  
+		$tot = mk_count('fl_eventi_hrc','stato_evento != 4 AND (YEAR(data_evento) = '.$value.') ');  
 
 		echo '<li class="'.$sel.'" id="'.$key.'"><a href="mod_seleziona_disponibilita_ambienti.php?closed&anno='.$value.$totaleOspiti.'">'.$value.' ('.$tot.')</a></li>';
 	

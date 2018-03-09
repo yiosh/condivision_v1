@@ -114,14 +114,14 @@ if(isset($_POST['evento_id']) && isset($_POST['numero_adulti']) && isset($_POST[
 
 			foreach($value as $single_value){
 				$explode = explode('.',$single_value);
-				$values .= "($lead_id,'".$explode[0]."','".$explode[1]."'),";
+				$values .= "($lead_id,'".$explode[0]."','".$explode[1]."', NOW(), ".$_SESSION['number']."),";
 
 			}
 			
 		}
 
 		$values = trim($values,',');
-		$sql = "INSERT INTO fl_disponibilita_date (`lead_id`, `data_disponibile`,ambiente_id) VALUES $values";
+		$sql = "INSERT INTO fl_disponibilita_date (`lead_id`, `data_disponibile`,`ambiente_id`,`data_creazione`,`operatore`) VALUES $values";
 		$insertDate = mysql_query($sql,CONNECT);
 		mysql_close(CONNECT);
 		echo json_encode(array('action'=>'popup','class'=>'green','url'=>"mod_disponibilita_note.php?lead_id=$lead_id&ambiente",'esito'=>"Salvato Correttamente!")); 

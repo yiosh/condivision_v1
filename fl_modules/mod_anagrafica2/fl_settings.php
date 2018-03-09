@@ -26,7 +26,7 @@
 
 	$module_title = 'Anagrafica';
     $module_menu = '';
-	$new_button = '<a href="mod_inserisci.php?a=accoun&external&action=1&id=1&nominativo=Nuovo utente" style="color:gray"><i class="fa fa-plus-circle"></i></a>';
+	$new_button = '<a href="mod_inserisci_smart.php?a=accoun&external&action=1&id=1&nominativo=Nuovo utente" style="color:gray"><i class="fa fa-plus-circle"></i></a>';
 	if(isset($_GET['action']) && check(@$_GET['action']) == 4) $module_title = 'Contact Center';
 		
 	if(isset($_GET['tab_id'])) { $tab_id = check($_GET['tab_id']); }

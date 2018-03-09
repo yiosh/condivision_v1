@@ -133,7 +133,12 @@ if(isset($_GET['associaEventoCliente'])) {
 
 ?>
 <input type="hidden" name="dir_upfile" value="icone_articoli" />
-
+<?php
+if($id == 1) {
+echo '<input type="hidden" name="reload" value="../mod_account2/mod_inserisci.php?id=1&anagrafica_id=" />';
+} else {
+echo '<input type="hidden" name="info" value="1" />';
+} ?>
 
 </form>
 
